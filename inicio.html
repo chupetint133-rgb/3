@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Mario Pattern</title>
+    <style>
+        :root {
+            --mario-yellow: #ffcc00;
+            --mario-white: #ffffff;
+            --mario-purple: #4e2a84; /* Color aproximado del fondo */
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            /* Reemplaza 'Mario Background Wallpapers.jpg' con la ruta real de tu imagen */
+            background: url('Mario Background Wallpapers.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3); /* Oscurece un poco el fondo para que resalte el patrón */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h2 {
+            color: var(--mario-white);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+        }
+
+        #pattern-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+        }
+
+        #pattern-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .dots-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            position: relative;
+        }
+
+        .dot {
+            width: 24px;
+            height: 24px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border: 2px solid var(--mario-white);
+            border-radius: 50%;
+            margin: auto;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background-color: var(--mario-yellow);
+            border-color: var(--mario-yellow);
+            transform: scale(1.4);
+            box-shadow: 0 0 15px var(--mario-yellow);
+        }
+
+        #message {
+            margin-top: 20px;
+            color: var(--mario-white);
+            font-weight: bold;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="overlay">
+    <h2>Ingresa tu Patrón</h2>
+    <div id="pattern-container">
+        <canvas id="pattern-canvas"></canvas>
+        <div class="dots-grid">
+            <div class="dot" data-index="1"></div>
+            <div class="dot" data-index="2"></div>
+            <div class="dot" data-index="3"></div>
+            <div class="dot" data-index="4"></div>
+            <div class="dot" data-index="5"></div>
+            <div class="dot" data-index="6"></div>
+            <div class="dot" data-index="7"></div>
+            <div class="dot" data-index="8"></div>
+            <div class="dot" data-index="9"></div>
+        </div>
+    </div>
+    <div id="message">Dibuja el patrón de 6 puntos</div>
+</div>
+
+<script>
+    const container = document.getElementById('pattern-container');
+    const canvas = document.getElementById('pattern-canvas');
+    const ctx = canvas.getContext('2d');
+    const dots = document.querySelectorAll('.dot');
+    const message = document.getElementById('message');
+
+    // CONFIGURACIÓN DEL PATRÓN
+    const SECRET_PATTERN = "1-2-3-6-9-8"; // Este es el patrón de 6 puntos
+    let isDrawing = false;
+    let currentPattern = [];
+
+    canvas.width = 320;
+    canvas.height = 320;
+
+    function getCoords(dot) {
+        const rect = dot.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        return {
+            x: rect.left - containerRect.left + rect.width / 2,
+            y: rect.top - containerRect.top + rect.height / 2,
+            id: dot.dataset.index
+        };
+    }
+
+    function startDrawing(e) {
+        isDrawing = true;
+        currentPattern = [];
+        dots.forEach(d => d.classList.remove('active'));
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        message.innerText = "Dibujando...";
+        message.style.color = "white";
+    }
+
+    function handleMove(e) {
+        if (!isDrawing) return;
+        
+        const x = e.touches ? e.touches[0].clientX : e.clientX;
+        const y = e.touches ? e.touches[0].clientY : e.clientY;
+
+        dots.forEach(dot => {
+            const rect = dot.getBoundingClientRect();
+            if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                const pos = getCoords(dot);
+                if (!currentPattern.find(p => p.id === pos.id)) {
+                    currentPattern.push(pos);
+                    dot.classList.add('active');
+                    // Vibración opcional para móviles
+                    if (navigator.vibrate) navigator.vibrate(40);
+                }
+            }
+        });
+
+        draw(x, y);
+    }
+
+    function endDrawing() {
+        if (!isDrawing) return;
+        isDrawing = false;
+
+        const patternStr = currentPattern.map(p => p.id).join('-');
+        
+        if (patternStr === SECRET_PATTERN) {
+            message.innerText = "¡Acceso Concedido!";
+            message.style.color = "#44ff44";
+            // Aquí podrías redirigir: window.location.href = "tu_app.html";
+        } else {
+            message.innerText = "Patrón Incorrecto";
+            message.style.color = "#ff4444";
+            setTimeout(() => {
+                dots.forEach(d => d.classList.remove('active'));
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }, 800);
+        }
+    }
+
+    function draw(mouseX, mouseY) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (currentPattern.length === 0) return;
+
+        ctx.beginPath();
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = '#ffcc00';
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+
+        ctx.moveTo(currentPattern[0].x, currentPattern[0].y);
+        for (let i = 1; i < currentPattern.length; i++) {
+            ctx.lineTo(currentPattern[i].x, currentPattern[i].y);
+        }
+
+        // Línea elástica hacia el dedo/ratón
+        const containerRect = container.getBoundingClientRect();
+        ctx.lineTo(mouseX - containerRect.left, mouseY - containerRect.top);
+        ctx.stroke();
+    }
+
+    // Eventos Mouse
+    container.addEventListener('mousedown', startDrawing);
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', endDrawing);
+
+    // Eventos Touch (Móviles)
+    container.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(); });
+    window.addEventListener('touchmove', (e) => { handleMove(e); });
+    window.addEventListener('touchend', endDrawing);
+
+</script>
+</body>
+</html>
